@@ -84,12 +84,20 @@ const App: React.FC = () => {
       <main className="flex-1 flex flex-col h-screen">
         <header className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700 p-4 flex justify-between items-center">
           <h1 className="text-xl font-bold text-sky-400">Gemini RAG Chatbot</h1>
-          <button
-            onClick={handleNewChat}
-            className="px-4 py-2 text-sm font-semibold bg-sky-600 rounded-lg hover:bg-sky-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"
-          >
-            New Chat
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleNewChat}
+              className="px-4 py-2 text-sm font-semibold bg-sky-600 rounded-lg hover:bg-sky-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"
+            >
+              New Chat
+            </button>
+            <button
+              onClick={handleNewChat}
+              className="px-4 py-2 text-sm font-semibold bg-red-600 rounded-lg hover:bg-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
+            >
+              Clear Chat
+            </button>
+          </div>
         </header>
         <ChatWindow
           chatHistory={chatHistory}
