@@ -74,14 +74,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 className="mt-1 block w-full bg-slate-900 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
               >
                 <option value="gemini">Google Gemini</option>
+                <option value="llama">Llama (via Groq)</option>
                 <option value="openai">OpenAI</option>
-                <option value="llama">Llama</option>
                 <option value="claude">Anthropic Claude</option>
               </select>
             </div>
             <div>
               <label htmlFor="apiKey" className="block text-sm font-medium text-slate-300">
-                API Key
+                API Key {localSettings.apiProvider === 'llama' && '(Groq)'}
               </label>
               <input
                 type="password"
@@ -89,9 +89,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 name="apiKey"
                 value={localSettings.apiKey}
                 onChange={handleInputChange}
-                placeholder="Enter your API key"
+                placeholder={
+                  localSettings.apiProvider === 'llama'
+                    ? 'Enter your Groq API key'
+                    : 'Enter your API key'
+                }
                 className="mt-1 block w-full bg-slate-900 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
               />
+               {localSettings.apiProvider === 'llama' && (
+                <p className="mt-2 text-xs text-slate-500">
+                  Llama is provided via the <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="underline text-sky-400">Groq API</a> for fast inference.
+                </p>
+              )}
             </div>
           </fieldset>
           

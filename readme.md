@@ -7,7 +7,7 @@ The entire application runs in the browser, ensuring user data privacy and elimi
 ## Key Features
 
 - **Multi-LLM Support:**
-  - **Flexible Backend:** Seamlessly switch between different AI providers (Google Gemini, OpenAI, Llama, Anthropic Claude) via the settings menu.
+  - **Flexible Backend:** Seamlessly switch between different AI providers (Google Gemini, Llama, OpenAI, Anthropic Claude) via the settings menu.
   - **Scalable Architecture:** A dedicated service layer makes it easy to integrate new LLMs in the future.
 
 - **Centralized Settings & Actions:**
@@ -35,8 +35,8 @@ The entire application runs in the browser, ensuring user data privacy and elimi
 - **Frontend:** React, TypeScript, Tailwind CSS
 - **AI Models:**
   - **Google Gemini API (`@google/genai`):** Fully integrated support for models like `gemini-2.5-flash`.
-  - **Anthropic Claude:** Architecture in place for easy integration (currently placeholder).
-  - **OpenAI & Llama:** Architecture in place for easy integration (currently placeholder).
+  - **Meta Llama 3:** Fully integrated via the [Groq API](https://groq.com/) for high-speed inference.
+  - **OpenAI & Anthropic Claude:** Architecture in place for easy integration (currently placeholder).
 - **Document Parsing:** [PDF.js](https://mozilla.github.io/pdf.js/) by Mozilla, loaded via CDN to process PDFs directly in the browser.
 - **Browser APIs:**
   - `localStorage`: For data and settings persistence.
