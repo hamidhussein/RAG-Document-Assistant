@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AppSettings } from '../types';
-import { BotIcon, OpenAiIcon, LlamaIcon } from './Icons';
+import { BotIcon, OpenAiIcon, LlamaIcon, ClaudeIcon } from './Icons';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -15,11 +15,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
   useEffect(() => {
     setLocalSettings(initialSettings);
+    setError(''); // Clear errors when modal is opened or settings change
   }, [initialSettings, isOpen]);
 
   if (!isOpen) return null;
 
   const handleSave = () => {
+    if (!localSettings.apiKey.trim()) {
+      setError(`API Key cannot be empty for the selected '${localSettings.apiProvider}' provider.`);
+      return;
+    }
     if (localSettings.chunkOverlap >= localSettings.chunkSize) {
       setError('Overlap must be smaller than Chunk Size.');
       return;
@@ -125,11 +130,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 />
                 <p className="mt-2 text-xs text-slate-500">How many characters to overlap between chunks. Recommended: 50-200.</p>
             </div>
-            {error && <p className="text-sm text-red-400">{error}</p>}
             <div className="bg-slate-900/50 p-3 rounded-md text-center text-xs text-slate-500 border border-slate-700">
               <p><span className="font-semibold text-slate-400">Note:</span> These settings only affect newly uploaded documents. Please re-upload files to apply new settings.</p>
             </div>
           </fieldset>
+
+          {error && (
+            <div className="bg-red-900/50 border border-red-700 text-red-300 text-sm rounded-md p-3 -mt-2">
+              {error}
+            </div>
+          )}
         </div>
 
         <div className="px-6 py-4 bg-slate-900/50 flex justify-end space-x-3 rounded-b-xl border-t border-slate-700 flex-shrink-0">
