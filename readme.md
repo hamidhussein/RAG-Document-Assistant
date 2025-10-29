@@ -1,10 +1,17 @@
-# Gemini RAG Chatbot
+# Multi-LLM RAG Chatbot
 
-This project is a sophisticated, client-side Retrieval-Augmented Generation (RAG) chatbot built with React, TypeScript, and the Google Gemini API. It allows users to upload their own documents (PDFs or text files) and engage in a conversation where the AI's responses are grounded in the content of those documents.
+This project is a sophisticated, client-side Retrieval-Augmented Generation (RAG) chatbot built with React, TypeScript, and a flexible backend supporting multiple Large Language Models, including the Google Gemini API. It allows users to upload their own documents (PDFs or text files) and engage in a conversation where the AI's responses are grounded in the content of those documents.
 
 The entire application runs in the browser, ensuring user data privacy and eliminating the need for a complex server-side setup.
 
 ## Key Features
+
+- **Multi-LLM Support:**
+  - **Flexible Backend:** Seamlessly switch between different AI providers (Google Gemini, OpenAI, Llama, Anthropic Claude) via the settings menu.
+  - **Scalable Architecture:** A dedicated service layer makes it easy to integrate new LLMs in the future.
+
+- **Centralized Settings & Actions:**
+  - A comprehensive settings modal serves as the control hub for API configuration, chat management ("New Chat", "Clear Chat"), and document processing (chunk size, overlap).
 
 - **Complete Document Management (CRUD):**
   - **Upload:** Easily upload multiple PDF or `.txt` files via a file picker or drag-and-drop.
@@ -12,40 +19,40 @@ The entire application runs in the browser, ensuring user data privacy and elimi
   - **Delete:** Remove documents and their associated data with a single click.
 
 - **Advanced RAG Pipeline (Client-Side):**
-  - **Document Processing:** Automatically extracts text from PDFs and `.txt` files, then splits the content into smaller, overlapping chunks for precise information retrieval.
+  - **Document Processing:** Automatically extracts text from files and splits it into smaller, overlapping chunks for precise information retrieval.
   - **Simulated Vector Embeddings:** Converts text chunks into numerical vectors to enable semantic search. *(See "A Note on Embeddings" below)*.
-  - **Semantic Search:** When a user asks a question, the application performs a cosine similarity search to find the most contextually relevant document chunks.
-  - **Context-Aware Prompting:** The retrieved chunks are dynamically injected into a prompt for the Gemini model, instructing it to answer based *only* on the provided information.
+  - **Semantic Search:** Performs a cosine similarity search to find the most contextually relevant document chunks for a given query.
+  - **Context-Aware Prompting:** The retrieved chunks are dynamically injected into the prompt, instructing the LLM to answer based *only* on the provided information.
 
 - **Polished User Experience:**
-  - **Interactive Chat Interface:** A familiar and intuitive chat window for conversation.
-  - **Persistence:** All documents and processed data are saved to the browser's `localStorage`, so your files are available across sessions.
+  - **Interactive Chat Interface:** An intuitive and clean chat window.
+  - **Persistence:** All documents and settings are saved to the browser's `localStorage`, so your files and configuration are available across sessions.
   - **Asynchronous Operations:** File processing and AI responses happen in the background without freezing the UI, with clear loading indicators.
-  - **Responsive Design:** The layout is built with Tailwind CSS for a seamless experience on various screen sizes.
+  - **Responsive Design:** Built with Tailwind CSS for a seamless experience on any screen size.
 
 ## Technology Stack
 
 - **Frontend:** React, TypeScript, Tailwind CSS
-- **AI Model:** Google Gemini API (`@google/genai`), specifically using the `gemini-2.5-flash` model.
+- **AI Models:**
+  - **Google Gemini API (`@google/genai`):** Fully integrated support for models like `gemini-2.5-flash`.
+  - **Anthropic Claude:** Architecture in place for easy integration (currently placeholder).
+  - **OpenAI & Llama:** Architecture in place for easy integration (currently placeholder).
 - **Document Parsing:** [PDF.js](https://mozilla.github.io/pdf.js/) by Mozilla, loaded via CDN to process PDFs directly in the browser.
 - **Browser APIs:**
-  - `localStorage`: For data persistence.
-  - `FileReader API`: For reading file content.
-  - `Drag and Drop API`: For an enhanced file upload experience.
+  - `localStorage`: For data and settings persistence.
+  - `FileReader API` & `Drag and Drop API`: For a modern file upload experience.
 
 ## How the RAG Pipeline Works
 
-This application implements a full RAG pipeline from start to finish within the browser:
-
-1.  **Ingestion & Processing:** When a file is uploaded, the `FileReader` and `PDF.js` APIs are used to extract its raw text.
-2.  **Chunking:** The extracted text is divided into manageable chunks (around 800 characters) with a slight overlap to maintain contextual continuity between them.
-3.  **Embedding (Simulated):** Each text chunk is passed through a function that generates a numerical vector (an "embedding"). This vector represents the semantic meaning of the text.
-4.  **Storage:** The original document metadata, its text chunks, and their corresponding embeddings are all stored in the browser's `localStorage`.
+1.  **Ingestion & Processing:** When a file is uploaded, its raw text is extracted.
+2.  **Chunking:** The text is divided into manageable chunks based on configurable size and overlap settings.
+3.  **Embedding (Simulated):** Each text chunk is converted into a numerical vector representing its semantic meaning.
+4.  **Storage:** Document metadata, text chunks, and their embeddings are stored in `localStorage`.
 5.  **Retrieval:** When you ask a question:
     - Your query is also converted into an embedding.
-    - The application calculates the cosine similarity between your query's embedding and the embeddings of all stored document chunks.
-    - The chunks with the highest similarity scores (i.e., the most relevant ones) are retrieved.
-6.  **Generation:** The retrieved chunks are combined with your original question into a carefully crafted prompt. This prompt is then sent to the Gemini API, which generates a final, contextually grounded answer.
+    - The application calculates the cosine similarity between your query's embedding and all stored document chunk embeddings.
+    - The most relevant chunks are retrieved.
+6.  **Generation:** The retrieved chunks are combined with your original question into a carefully crafted prompt. This prompt is sent to your selected LLM (e.g., Gemini) via the abstracted `llmService` to generate a final, contextually grounded answer.
 
 ---
 

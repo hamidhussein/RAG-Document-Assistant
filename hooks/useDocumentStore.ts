@@ -1,7 +1,7 @@
-
 import { useState, useEffect, useCallback } from 'react';
-import { Document, DocumentStatus, Chunk } from '../types';
+import { Document } from '../types';
 import { processDocument } from '../services/documentProcessor';
+import { AppSettings } from '../types';
 
 const LOCAL_STORAGE_KEY = 'rag_documents';
 
@@ -27,7 +27,7 @@ export const useDocumentStore = () => {
     }
   }, [documents]);
 
-  const addDocument = useCallback(async (file: File) => {
+  const addDocument = useCallback(async (file: File, settings: AppSettings) => {
     const newDoc: Document = {
       id: `doc_${Date.now()}`,
       name: file.name,
@@ -40,7 +40,10 @@ export const useDocumentStore = () => {
     setDocuments(prev => [...prev, newDoc]);
 
     try {
-      const { content, chunks } = await processDocument(file, newDoc.id);
+      const { content, chunks } = await processDocument(file, newDoc.id, {
+        chunkSize: settings.chunkSize,
+        chunkOverlap: settings.chunkOverlap,
+      });
       updateDocument(newDoc.id, { content, chunks, status: 'processed' });
     } catch (error: any) {
       console.error("Failed to process document:", error);

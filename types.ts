@@ -1,4 +1,3 @@
-
 export interface Chunk {
   id: string;
   documentId: string;
@@ -22,4 +21,13 @@ export interface Document {
 export interface ChatMessage {
   sender: 'user' | 'bot';
   text: string;
+}
+
+export type ApiProvider = 'gemini' | 'openai' | 'llama' | 'claude';
+
+export interface AppSettings {
+  apiProvider: ApiProvider;
+  apiKey: string;
+  chunkSize: number;
+  chunkOverlap: number;
 }

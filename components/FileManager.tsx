@@ -1,14 +1,14 @@
-
 import React, { useRef, useState, useCallback } from 'react';
 import { Document } from '../types';
 import { FileItem } from './FileItem';
-import { UploadIcon } from './Icons';
+import { UploadIcon, PlusCircleIcon, TrashIcon } from './Icons';
 
 interface FileManagerProps {
   documents: Document[];
   onAddDocument: (file: File) => void;
   onUpdateDocument: (docId: string, updates: Partial<Document>) => void;
   onDeleteDocument: (docId: string) => void;
+  onNewChat: () => void;
 }
 
 export const FileManager: React.FC<FileManagerProps> = ({
@@ -16,6 +16,7 @@ export const FileManager: React.FC<FileManagerProps> = ({
   onAddDocument,
   onUpdateDocument,
   onDeleteDocument,
+  onNewChat,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -94,6 +95,23 @@ export const FileManager: React.FC<FileManagerProps> = ({
             </div>
           )}
         </div>
+      </div>
+      <div className="p-2 border-t border-slate-700 flex items-center space-x-2">
+        <button 
+          onClick={onNewChat}
+          className="flex-1 flex items-center justify-center space-x-2 text-sm px-4 py-2 font-semibold bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500"
+        >
+          <PlusCircleIcon className="w-5 h-5" />
+          <span>New Chat</span>
+        </button>
+        <button 
+          onClick={onNewChat}
+          className="flex-1 flex items-center justify-center space-x-2 text-sm px-4 py-2 font-semibold bg-red-800/50 text-red-300 rounded-lg hover:bg-red-700/50 hover:text-red-200 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
+          aria-label="Clear chat history"
+        >
+           <TrashIcon className="w-5 h-5" />
+          <span>Clear Chat</span>
+        </button>
       </div>
     </aside>
   );

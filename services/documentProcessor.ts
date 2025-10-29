@@ -1,12 +1,13 @@
-
 import { Chunk } from '../types';
 import { generateEmbedding } from './vectorService';
 
 // Since we're loading PDF.js from a CDN, we need to declare the global variable for TypeScript.
 declare const pdfjsLib: any;
 
-const CHUNK_SIZE = 800; // tokens ~ 3200 chars
-const CHUNK_OVERLAP = 100; // tokens ~ 400 chars
+interface ChunkConfig {
+  chunkSize: number;
+  chunkOverlap: number;
+}
 
 async function extractTextFromFile(file: File): Promise<string> {
   if (file.type === 'application/pdf') {
@@ -29,24 +30,45 @@ async function extractTextFromFile(file: File): Promise<string> {
   }
 }
 
-function chunkText(text: string): string[] {
+function chunkText(text: string, chunkSize: number, chunkOverlap: number): string[] {
   const chunks: string[] = [];
+  if (chunkSize <= chunkOverlap) {
+    console.error("Chunk size must be greater than chunk overlap.");
+    return [text]; // Return the whole text as a single chunk on error
+  }
+
   let i = 0;
   while (i < text.length) {
-    const end = Math.min(i + CHUNK_SIZE, text.length);
+    const end = Math.min(i + chunkSize, text.length);
     chunks.push(text.slice(i, end));
-    i += CHUNK_SIZE - CHUNK_OVERLAP;
-    if (i >= text.length - CHUNK_OVERLAP && end < text.length) {
-       chunks.push(text.slice(i));
-       break;
+    const nextStart = i + chunkSize - chunkOverlap;
+    
+    // If the next start is the same as current, it will cause an infinite loop.
+    // This happens if chunksize is small and overlap is large.
+    if (nextStart <= i) {
+        i = end;
+        if (i >= text.length) break;
+        continue;
+    }
+    
+    i = nextStart;
+
+    // A small optimization to not create a tiny chunk at the end
+    if (text.length - i < chunkOverlap && i < text.length) {
+      chunks.push(text.slice(i));
+      break;
     }
   }
   return chunks.filter(c => c.trim().length > 0);
 }
 
-export async function processDocument(file: File, documentId: string): Promise<{ content: string; chunks: Chunk[] }> {
+export async function processDocument(
+  file: File, 
+  documentId: string, 
+  settings: ChunkConfig
+): Promise<{ content: string; chunks: Chunk[] }> {
   const content = await extractTextFromFile(file);
-  const textChunks = chunkText(content);
+  const textChunks = chunkText(content, settings.chunkSize, settings.chunkOverlap);
   
   const chunks: Chunk[] = await Promise.all(
     textChunks.map(async (text, index) => {
