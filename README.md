@@ -68,18 +68,6 @@ npm start
 
 5. Upload your documents, select your LLM, and start chatting!  
 
----
-
-## 📝 Example Questions
-
-- What is the main focus of this document?  
-- Summarize the introduction in simple terms.  
-- How does the document define “digital ethics”?  
-- List examples of legal regulations mentioned.  
-- Compare two ethical frameworks discussed.  
-- How should developers approach AI projects to stay within ethical and legal boundaries?  
-
----
 
 ## Future Improvements
 
