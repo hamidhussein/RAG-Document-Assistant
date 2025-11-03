@@ -1,5 +1,5 @@
 {
-  "name": "Multi LLM  RAG Chatbot",
-  "description": "A Retrieval-Augmented Generation (RAG) chatbot that allows users to upload and manage documents (PDF or text files), then answers queries based on the content of those documents.",
+  "name": "Client-Side RAG Chatbot",
+  "description": "A Retrieval-Augmented Generation (RAG) chatbot built with React that allows users to chat with their documents (PDF or text files) entirely in the browser. It uses a custom, simulated RAG pipeline.",
   "requestFramePermissions": []
 }

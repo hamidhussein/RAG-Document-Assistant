@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { Document } from '../types';
 import { FileItem } from './FileItem';
-import { UploadIcon, PlusCircleIcon, TrashIcon } from './Icons';
+import { UploadIcon, PlusCircleIcon, QuestionMarkCircleIcon, ArrowDownTrayIcon, ArrowUpTrayIcon } from './Icons';
 
 interface FileManagerProps {
   documents: Document[];
@@ -9,6 +9,10 @@ interface FileManagerProps {
   onUpdateDocument: (docId: string, updates: Partial<Document>) => void;
   onDeleteDocument: (docId: string) => void;
   onNewChat: () => void;
+  onOpenHowItWorks: () => void;
+  onReprocessDocument: (docId: string) => void;
+  onExportData: () => void;
+  onImportData: (file: File) => void;
 }
 
 export const FileManager: React.FC<FileManagerProps> = ({
@@ -17,8 +21,13 @@ export const FileManager: React.FC<FileManagerProps> = ({
   onUpdateDocument,
   onDeleteDocument,
   onNewChat,
+  onOpenHowItWorks,
+  onReprocessDocument,
+  onExportData,
+  onImportData,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileSelect = (files: FileList | null) => {
@@ -27,10 +36,19 @@ export const FileManager: React.FC<FileManagerProps> = ({
         if (file.type === 'application/pdf' || file.type === 'text/plain') {
           onAddDocument(file);
         } else {
-          // You could show an error toast here
-          console.warn(`Unsupported file type: ${file.type}`);
+          alert(`Unsupported file type: ${file.type}. Please upload PDF or TXT files.`);
         }
       });
+    }
+  };
+  
+  const handleImportSelect = (files: FileList | null) => {
+    if (files && files[0]) {
+      if (files[0].type === 'application/json') {
+        onImportData(files[0]);
+      } else {
+        alert('Invalid file type. Please select a .json backup file.');
+      }
     }
   };
 
@@ -53,8 +71,19 @@ export const FileManager: React.FC<FileManagerProps> = ({
   return (
     <aside className="w-80 bg-slate-800 flex flex-col h-full border-r border-slate-700">
       <div className="p-4 border-b border-slate-700">
-        <h2 className="text-lg font-semibold text-white">My Documents</h2>
-        <p className="text-xs text-slate-400">Upload PDFs or TXT files to chat with.</p>
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-white">My Documents</h2>
+          <button 
+            onClick={onOpenHowItWorks}
+            className="p-1 rounded-full text-slate-400 hover:bg-slate-700 hover:text-sky-400 transition-colors"
+            aria-label="How it works"
+          >
+            <QuestionMarkCircleIcon className="w-5 h-5"/>
+          </button>
+        </div>
+        <p className="text-xs text-slate-400">
+          Upload PDFs or TXT files to chat with.
+        </p>
       </div>
       <div 
         className="flex-1 overflow-y-auto p-2"
@@ -87,6 +116,8 @@ export const FileManager: React.FC<FileManagerProps> = ({
                 key={doc.id}
                 document={doc}
                 onDelete={onDeleteDocument}
+                onRename={(docId, newName) => onUpdateDocument(docId, { name: newName })}
+                onReprocess={onReprocessDocument}
               />
             ))
           ) : (
@@ -96,22 +127,39 @@ export const FileManager: React.FC<FileManagerProps> = ({
           )}
         </div>
       </div>
-      <div className="p-2 border-t border-slate-700 flex items-center space-x-2">
+      <div className="p-2 border-t border-slate-700 space-y-2">
         <button 
           onClick={onNewChat}
-          className="flex-1 flex items-center justify-center space-x-2 text-sm px-4 py-2 font-semibold bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500"
+          className="w-full flex items-center justify-center space-x-2 text-sm px-4 py-2 font-semibold bg-sky-600 text-white rounded-lg hover:bg-sky-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"
         >
           <PlusCircleIcon className="w-5 h-5" />
           <span>New Chat</span>
         </button>
-        <button 
-          onClick={onNewChat}
-          className="flex-1 flex items-center justify-center space-x-2 text-sm px-4 py-2 font-semibold bg-red-800/50 text-red-300 rounded-lg hover:bg-red-700/50 hover:text-red-200 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
-          aria-label="Clear chat history"
-        >
-           <TrashIcon className="w-5 h-5" />
-          <span>Clear Chat</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <input
+            type="file"
+            ref={importInputRef}
+            onChange={(e) => handleImportSelect(e.target.files)}
+            className="hidden"
+            accept=".json"
+          />
+          <button 
+            onClick={() => importInputRef.current?.click()}
+            className="flex-1 flex items-center justify-center space-x-2 text-sm px-4 py-2 font-semibold bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500"
+            title="Import documents from a backup file"
+          >
+            <ArrowUpTrayIcon className="w-5 h-5" />
+            <span>Import</span>
+          </button>
+           <button 
+            onClick={onExportData}
+            className="flex-1 flex items-center justify-center space-x-2 text-sm px-4 py-2 font-semibold bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500"
+            title="Export all documents to a backup file"
+          >
+            <ArrowDownTrayIcon className="w-5 h-5" />
+            <span>Export</span>
+          </button>
+        </div>
       </div>
     </aside>
   );

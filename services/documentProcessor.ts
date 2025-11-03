@@ -1,13 +1,8 @@
-import { Chunk } from '../types';
-import { generateEmbedding } from './vectorService';
+import { Chunk, AppSettings } from '../types';
+import { generateBatchEmbeddings } from './embeddingService';
 
 // Since we're loading PDF.js from a CDN, we need to declare the global variable for TypeScript.
 declare const pdfjsLib: any;
-
-interface ChunkConfig {
-  chunkSize: number;
-  chunkOverlap: number;
-}
 
 async function extractTextFromFile(file: File): Promise<string> {
   if (file.type === 'application/pdf') {
@@ -17,7 +12,9 @@ async function extractTextFromFile(file: File): Promise<string> {
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
-      text += content.items.map((item: any) => item.str).join(' ');
+      // Join single-character strings and add spaces appropriately.
+      text += content.items.map((item: any) => item.str).join(' ').replace(/\s+/g, ' ').trim();
+      text += '\n'; // Add newline after each page
     }
     return text;
   } else {
@@ -30,57 +27,63 @@ async function extractTextFromFile(file: File): Promise<string> {
   }
 }
 
-function chunkText(text: string, chunkSize: number, chunkOverlap: number): string[] {
-  const chunks: string[] = [];
-  if (chunkSize <= chunkOverlap) {
-    console.error("Chunk size must be greater than chunk overlap.");
-    return [text]; // Return the whole text as a single chunk on error
+async function chunkText(
+  text: string,
+  documentId: string,
+  chunkSize: number,
+  chunkOverlap: number
+): Promise<Chunk[]> {
+  const chunks: Chunk[] = [];
+  let index = 0;
+  let chunkIndex = 0;
+
+  while (index < text.length) {
+    const start = index;
+    const end = Math.min(index + chunkSize, text.length);
+    const content = text.slice(start, end);
+
+    chunks.push({
+      id: `${documentId}_chunk_${chunkIndex++}`,
+      documentId,
+      content,
+    });
+
+    index += chunkSize - chunkOverlap;
+    if (index >= text.length) break; // prevent infinite loops on zero/negative overlap
   }
 
-  let i = 0;
-  while (i < text.length) {
-    const end = Math.min(i + chunkSize, text.length);
-    chunks.push(text.slice(i, end));
-    const nextStart = i + chunkSize - chunkOverlap;
-    
-    // If the next start is the same as current, it will cause an infinite loop.
-    // This happens if chunksize is small and overlap is large.
-    if (nextStart <= i) {
-        i = end;
-        if (i >= text.length) break;
-        continue;
-    }
-    
-    i = nextStart;
-
-    // A small optimization to not create a tiny chunk at the end
-    if (text.length - i < chunkOverlap && i < text.length) {
-      chunks.push(text.slice(i));
-      break;
-    }
-  }
-  return chunks.filter(c => c.trim().length > 0);
+  return chunks;
 }
+
 
 export async function processDocument(
   file: File, 
   documentId: string, 
-  settings: ChunkConfig
+  settings: Pick<AppSettings, 'chunkSize' | 'chunkOverlap' | 'retrievalMode'>,
+  skipExtraction: boolean = false
 ): Promise<{ content: string; chunks: Chunk[] }> {
-  const content = await extractTextFromFile(file);
-  const textChunks = chunkText(content, settings.chunkSize, settings.chunkOverlap);
+  // If we skip extraction, it means the File object was created from raw text we already have.
+  const content = skipExtraction ? await file.text() : await extractTextFromFile(file);
   
-  const chunks: Chunk[] = await Promise.all(
-    textChunks.map(async (text, index) => {
-      const embedding = await generateEmbedding(text);
-      return {
-        id: `${documentId}_chunk_${index}`,
-        documentId,
-        text,
-        embedding,
-      };
-    })
+  const chunksWithoutEmbeddings = await chunkText(
+    content,
+    documentId,
+    settings.chunkSize,
+    settings.chunkOverlap
   );
 
-  return { content, chunks };
+  if (settings.retrievalMode === 'semantic') {
+    const chunkContents = chunksWithoutEmbeddings.map(chunk => chunk.content);
+    const embeddings = await generateBatchEmbeddings(chunkContents);
+    
+    const chunksWithEmbeddings = chunksWithoutEmbeddings.map((chunk, i) => ({
+        ...chunk,
+        embedding: embeddings[i],
+    }));
+
+    return { content, chunks: chunksWithEmbeddings };
+  }
+
+
+  return { content, chunks: chunksWithoutEmbeddings };
 }

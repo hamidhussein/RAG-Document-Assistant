@@ -1,56 +1,104 @@
+import { Chunk, RetrievalMode } from '../types';
+import { generateEmbedding } from './embeddingService';
 
-import { Chunk } from '../types';
+// Simple stop words list
+const STOP_WORDS = new Set(['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now']);
 
-const EMBEDDING_DIMENSION = 128; // A smaller, arbitrary dimension for simulation
+function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .split(/\s+/)
+    .map(word => word.replace(/[^\w]/g, ''))
+    .filter(word => word.length > 1 && !STOP_WORDS.has(word));
+}
 
-/**
- * SIMULATED: Generates a random vector to simulate a text embedding.
- * In a real application, this would call a dedicated embedding model API.
- * The Gemini client-side SDK as of this implementation does not provide a direct embedding endpoint.
- * @param text - The text to "embed".
- * @returns A promise that resolves to a random vector.
- */
-export const generateEmbedding = async (text: string): Promise<number[]> => {
-  // Simulate network latency
-  await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 50));
-  
-  // Create a random vector. This is a stand-in for a real embedding.
-  const vector = Array.from(
-    { length: EMBEDDING_DIMENSION },
-    () => Math.random() * 2 - 1
-  );
 
-  // Normalize the vector (important for cosine similarity)
-  const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
-  return vector.map(v => v / magnitude);
-};
+// --- Helper for Semantic Search ---
+function cosineSimilarity(vecA: number[], vecB: number[]): number {
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    for (let i = 0; i < vecA.length; i++) {
+        dotProduct += vecA[i] * vecB[i];
+        normA += vecA[i] * vecA[i];
+        normB += vecB[i] * vecB[i];
+    }
+    if (normA === 0 || normB === 0) return 0;
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
 
-/**
- * Calculates the dot product of two vectors.
- * Since vectors are normalized, this is equivalent to cosine similarity.
- */
-const dotProduct = (vecA: number[], vecB: number[]): number => {
-  return vecA.reduce((sum, val, i) => sum + val * vecB[i], 0);
-};
+async function semanticSearch(query: string, allChunks: Chunk[], topK: number): Promise<Chunk[]> {
+    if (allChunks.length === 0) return [];
+    
+    const queryEmbedding = await generateEmbedding(query);
+    
+    const chunksWithEmbeddings = allChunks.filter(chunk => chunk.embedding && chunk.embedding.length > 0);
+    if (chunksWithEmbeddings.length === 0) {
+        console.warn("Semantic search was requested, but no chunks have embeddings. Reprocess documents with semantic mode enabled.");
+        return [];
+    }
 
-/**
- * Finds the top N most similar chunks to a query text.
- * @param query - The user's query text.
- * @param chunks - The list of all document chunks.
- * @param topN - The number of similar chunks to return.
- * @returns An array of the most relevant chunks.
- */
-export const searchSimilarChunks = async (query: string, chunks: Chunk[], topN: number): Promise<Chunk[]> => {
-  if (chunks.length === 0) return [];
-  
-  const queryEmbedding = await generateEmbedding(query);
-  
-  const scoredChunks = chunks.map(chunk => ({
-    chunk,
-    similarity: dotProduct(queryEmbedding, chunk.embedding),
-  }));
-  
-  scoredChunks.sort((a, b) => b.similarity - a.similarity);
-  
-  return scoredChunks.slice(0, topN).map(item => item.chunk);
-};
+    const chunkScores = chunksWithEmbeddings.map(chunk => ({
+        chunk,
+        score: cosineSimilarity(queryEmbedding, chunk.embedding!),
+    }));
+
+    return chunkScores
+        .sort((a, b) => b.score - a.score)
+        .slice(0, topK)
+        .map(item => item.chunk);
+}
+
+async function tfidfSearch(query: string, allChunks: Chunk[], topK: number): Promise<Chunk[]> {
+    const queryKeywords = tokenize(query);
+    const totalDocuments = allChunks.length;
+
+    if (queryKeywords.length === 0 || totalDocuments === 0) {
+        return allChunks.slice(0, topK);
+    }
+    
+    const idfCache = new Map<string, number>();
+    queryKeywords.forEach(keyword => {
+        const docsWithTerm = allChunks.filter(chunk => chunk.content.toLowerCase().includes(keyword)).length;
+        const idf = Math.log(totalDocuments / (1 + docsWithTerm));
+        idfCache.set(keyword, idf);
+    });
+
+    const chunkScores = allChunks.map(chunk => {
+        const chunkWords = chunk.content.toLowerCase().split(/\s+/);
+        const totalWordsInChunk = chunkWords.length;
+        let score = 0;
+
+        if (totalWordsInChunk > 0) {
+            queryKeywords.forEach(keyword => {
+                const termFrequencyInChunk = chunkWords.filter(word => word === keyword).length;
+                const tf = termFrequencyInChunk / totalWordsInChunk;
+                const idf = idfCache.get(keyword) || 0;
+                score += tf * idf;
+            });
+        }
+        return { chunk, score };
+    });
+
+    const sortedChunks = chunkScores
+        .filter(item => item.score > 0)
+        .sort((a, b) => b.score - a.score);
+
+    if (sortedChunks.length === 0) {
+        return allChunks.slice(0, topK);
+    }
+
+    return sortedChunks.slice(0, topK).map(item => item.chunk);
+}
+
+export async function searchSimilarChunks(
+    query: string, 
+    allChunks: Chunk[], 
+    retrievalMode: RetrievalMode, 
+    topK = 5
+): Promise<Chunk[]> {
+    if (retrievalMode === 'semantic') {
+        return semanticSearch(query, allChunks, topK);
+    }
+    return tfidfSearch(query, allChunks, topK);
+}

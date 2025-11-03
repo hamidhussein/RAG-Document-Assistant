@@ -8,6 +8,7 @@ const defaultSettings: AppSettings = {
   apiKey: '',
   chunkSize: 800,
   chunkOverlap: 100,
+  retrievalMode: 'tfidf',
 };
 
 export const useSettings = () => {
@@ -18,12 +19,8 @@ export const useSettings = () => {
       const storedSettings = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (storedSettings) {
         const parsedSettings = JSON.parse(storedSettings);
-        // Basic validation to ensure the loaded settings object has the expected shape
-        if (parsedSettings.apiProvider && parsedSettings.chunkSize && parsedSettings.chunkOverlap !== undefined) {
-          setSettings(parsedSettings);
-        } else {
-            setSettings(defaultSettings);
-        }
+        // Merge with defaults to ensure all keys are present and handle legacy settings
+        setSettings({ ...defaultSettings, ...parsedSettings });
       }
     } catch (error) {
       console.error("Failed to load settings from localStorage", error);

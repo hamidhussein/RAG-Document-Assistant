@@ -1,11 +1,13 @@
+export type DocumentStatus = 'processing' | 'processed' | 'error';
+
+export type RetrievalMode = 'tfidf' | 'semantic';
+
 export interface Chunk {
   id: string;
   documentId: string;
-  text: string;
-  embedding: number[]; // Simulated embedding
+  content: string;
+  embedding?: number[];
 }
-
-export type DocumentStatus = 'processing' | 'processed' | 'error';
 
 export interface Document {
   id: string;
@@ -13,9 +15,10 @@ export interface Document {
   type: 'pdf' | 'txt';
   content: string;
   status: DocumentStatus;
-  chunks?: Chunk[];
+  processedChunks?: Chunk[];
   uploadDate: string;
   errorMessage?: string;
+  hash?: string;
 }
 
 export interface ChatMessage {
@@ -30,4 +33,5 @@ export interface AppSettings {
   apiKey: string;
   chunkSize: number;
   chunkOverlap: number;
+  retrievalMode: RetrievalMode;
 }
