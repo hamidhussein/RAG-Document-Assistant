@@ -1,5 +1,5 @@
 {
-  "name": "Client-Side RAG Chatbot",
-  "description": "A Retrieval-Augmented Generation (RAG) chatbot built with React that allows users to chat with their documents (PDF or text files) entirely in the browser. It uses a custom, simulated RAG pipeline.",
+  "name": "KnowledgeMate – personal assistant for your documents.",
+  "description": "KnowledgeMate is a Retrieval-Augmented Generation (RAG) chatbot that allows users to chat with their documents (PDF or text files) entirely in the browser. It acts as a personal assistant for your documents.",
   "requestFramePermissions": []
 }

@@ -1,48 +1,63 @@
-# 100% Client-Side RAG Chatbot
+# KnowledgeMate – Your Private Document Assistant
 
-This project is a sophisticated, 100% client-side Retrieval-Augmented Generation (RAG) chatbot built with React and TypeScript. It supports multiple Large Language Models (including Google Gemini) and allows users to upload their own documents (PDFs or text files) to create a powerful, private, and context-aware chat experience.
+*A 100% client-side RAG chatbot to chat with your documents privately and securely.*
 
-The entire application—from document parsing and chunking to the final LLM generation—runs in the browser, ensuring user data privacy and eliminating the need for a server-side backend.
+KnowledgeMate is a powerful, privacy-first personal assistant for your documents. It's a Retrieval-Augmented Generation (RAG) chatbot that runs entirely in your web browser. You can upload your PDF or text files and ask questions about them using leading AI models like Google Gemini, without your sensitive data ever leaving your computer.
 
-## Key Features
+This project is built for anyone who needs to quickly find information in their documents—researchers, students, and professionals—without compromising on privacy.
 
-- **Multi-LLM Support:** Seamlessly switch between different AI providers (Google Gemini, Llama, OpenAI, Anthropic Claude) via the settings menu.
-- **Dual Retrieval Modes:** Choose your retrieval strategy:
-  - **TF-IDF (Fast):** A quick and efficient keyword-based search.
-  - **Semantic (Accurate):** A more advanced search that understands the meaning behind your query, powered by an in-browser transformer model.
-- **Robust Persistence with IndexedDB:** All documents are stored in the browser's IndexedDB, allowing for larger files and more persistent storage than standard `localStorage`.
-- **Advanced Document Management (CRUD):**
-  - **Upload with Duplicate Detection:** Upload multiple PDF or `.txt` files. The app hashes each file to prevent processing the same document twice.
-  - **View, Rename, Reprocess, Delete:** A clean sidebar lists all documents with real-time status indicators. You can rename files inline, re-process them with new settings, or delete them.
-- **Data Portability:**
-  - **Export/Import:** Easily export your entire document library to a JSON file and import it into another browser, making your knowledge base portable.
-- **Conversational Memory:** The chatbot remembers the last few turns of the conversation to understand follow-up questions and provide more contextual responses.
-- **100% Client-Side RAG Pipeline:**
-  - **In-Browser Processing:** All document parsing, text chunking, and embedding generation happens directly on the client.
-- **Polished User Experience:**
-  - **Interactive Chat Interface:** An intuitive and clean chat window.
-  - **Asynchronous Operations:** File processing and AI responses happen in the background with clear loading indicators.
-  - **Responsive Design:** Built with Tailwind CSS for a seamless experience on any screen size.
+## 🚀 Key Features
 
-## Technology Stack
+- **🔒 100% Private & Secure:** All document processing and AI interactions happen in your browser. Your files are never uploaded to a server.
+- **🧠 Multi-LLM Support:** Seamlessly switch between Google Gemini, OpenAI (GPT-4o-mini), Llama 3 (via Groq), and Anthropic Claude.
+- **🔍 Dual Retrieval Modes:**
+  - **TF-IDF (Fast):** A rapid, keyword-based search for quick lookups.
+  - **Semantic (Accurate):** An advanced search that understands the *meaning* of your query, powered by an in-browser transformer model.
+- **📚 Full Document Control (CRUD):**
+  - **Persistent Storage:** Uses IndexedDB to store your documents, so they're always there when you return.
+  - **Duplicate Detection:** Automatically prevents you from uploading the same file twice.
+  - **Manage Your Library:** Easily view, rename, re-process, and delete your documents.
+- **🌐 Data Portability:** Export your entire document library to a single JSON file and import it on another device or browser.
+- **💬 Conversational Memory:** Remembers the last few messages to understand follow-up questions and provide context-aware answers.
+
+## ⚙️ How It Works: The RAG Pipeline
+
+KnowledgeMate uses a sophisticated RAG pipeline to provide accurate answers from your documents:
+
+1.  **Ingestion & Processing:** When you upload a file, its text is extracted and broken down into smaller, manageable chunks.
+2.  **Indexing (Embedding):** Depending on the selected mode, chunks are indexed either by their keywords (TF-IDF) or by their semantic meaning using an in-browser AI model (Semantic).
+3.  **Retrieval:** When you ask a question, the app finds the most relevant chunks from your documents.
+4.  **Augmented Generation:** The relevant chunks, your conversation history, and your question are combined into a detailed prompt, which is sent to the AI to generate a final, grounded answer.
+
+## 🛠️ Technology Stack
 
 - **Frontend:** React, TypeScript, Tailwind CSS
-- **LLM Interaction:** `@google/genai` SDK, `fetch` API for other providers.
-- **Semantic Search:** [Transformers.js](https://github.com/xenova/transformers.js) by Xenova.
-- **Document Parsing:** [PDF.js](https://mozilla.github.io/pdf.js/) by Mozilla.
-- **Client-Side Storage:** [localForage](https://github.com/localForage/localForage) (for a simple IndexedDB API).
-- **Browser APIs:** `Web Crypto API` (for hashing), `localStorage` (for settings), `FileReader`, Drag and Drop.
+- **AI & ML (In-Browser):**
+    - **Semantic Search:** `@xenova/transformers.js`
+    - **LLM Interaction:** `@google/genai` SDK & `fetch` API
+- **Document Handling:**
+    - **PDF Parsing:** PDF.js (by Mozilla)
+    - **Client-Side Storage:** `localforage` (for IndexedDB)
+- **Browser APIs:** Web Crypto API, FileReader, Drag & Drop API
 
-## How the RAG Pipeline Works
+## 🚀 Getting Started
 
-1.  **Ingestion & Hashing:** When a file is uploaded, a unique hash is generated from its content to prevent duplicates. Its raw text is extracted using PDF.js or the FileReader API.
-2.  **Chunking:** The text is divided into smaller, manageable, overlapping chunks.
-3.  **Embedding (Conditional):** If "Semantic" mode is enabled, the app uses Transformers.js to convert each chunk into a vector embedding directly in the browser. These embeddings are stored in IndexedDB.
-4.  **Storage:** The document, its processed chunks, and (if applicable) its embeddings are saved to IndexedDB.
-5.  **Retrieval:**
-    - **TF-IDF Mode:** When you ask a question, the app uses a TF-IDF algorithm to score and rank all document chunks based on keyword relevance.
-    - **Semantic Mode:** The app generates an embedding for your question and uses cosine similarity to find the most semantically similar text chunks from the stored embeddings.
-6.  **Generation:**
-    - The top-scoring chunks (the context), the recent conversation history, and your original question are combined into a carefully crafted prompt.
-    - This prompt is sent to the selected LLM (e.g., Gemini).
-    - The model generates a final, contextually grounded answer, which is displayed in the UI.
+Getting started is simple, as there's no backend to set up.
+
+1.  **Download:** Download or clone this repository to your local machine.
+2.  **Open:** Open the `index.html` file directly in your web browser (e.g., Chrome, Firefox, Edge).
+3.  **Configure:**
+    - Click the **Settings** icon.
+    - Select your preferred AI Provider.
+    - Enter your API key.
+    - Click **Save**.
+4.  **Chat!** Upload your documents and start asking questions.
+
+## 🏛️ Architecture & Contributing
+
+- **Deep Dive:** For a detailed look at the project's architecture, components, and data flow, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+- **Contribute:** We welcome contributions! Please read our [CONTRIBUTING.md](./CONTRIBUTING.md) to learn how you can help.
+
+## 📜 License
+
+This project is licensed under the MIT License.
